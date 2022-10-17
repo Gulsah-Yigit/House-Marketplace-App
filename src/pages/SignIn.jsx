@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 import { Link, useNavigate } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
@@ -38,7 +39,9 @@ function SignIn() {
       if (userCredential.user) {
         navigate("/");
       }
-    } catch (error) {}
+    } catch (error) {
+      toast.error("Bad User Credentials");
+    }
   };
 
   return (
