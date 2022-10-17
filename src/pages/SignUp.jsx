@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -7,17 +8,17 @@ import {
 } from "firebase/auth";
 import { setDoc, doc, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.config";
+
 import { ReactComponent as ArrowRightIcon } from "../assets/svg/keyboardArrowRightIcon.svg";
 import visibilityIcon from "../assets/svg/visibilityIcon.svg";
 
-const SignUp = () => {
+function SignUp() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     password: "",
   });
-
   const { name, email, password } = formData;
 
   const navigate = useNavigate();
@@ -35,13 +36,13 @@ const SignUp = () => {
     try {
       const auth = getAuth();
 
-      const useCredential = await createUserWithEmailAndPassword(
+      const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
         password
       );
 
-      const user = useCredential.user;
+      const user = userCredential.user;
 
       updateProfile(auth.currentUser, {
         displayName: name,
@@ -54,9 +55,7 @@ const SignUp = () => {
       await setDoc(doc(db, "users", user.uid), formDataCopy);
 
       navigate("/");
-    } catch (error) {
-      console.log(error);
-    }
+    } catch (error) {}
   };
 
   return (
@@ -70,7 +69,7 @@ const SignUp = () => {
           <input
             type="text"
             className="nameInput"
-            placeholder="name"
+            placeholder="Name"
             id="name"
             value={name}
             onChange={onChange}
@@ -83,6 +82,7 @@ const SignUp = () => {
             value={email}
             onChange={onChange}
           />
+
           <div className="passwordInputDiv">
             <input
               type={showPassword ? "text" : "password"}
@@ -92,6 +92,7 @@ const SignUp = () => {
               value={password}
               onChange={onChange}
             />
+
             <img
               src={visibilityIcon}
               alt="show password"
@@ -99,9 +100,11 @@ const SignUp = () => {
               onClick={() => setShowPassword((prevState) => !prevState)}
             />
           </div>
-          <Link to="forgot-password" className="forgotPasswordLink">
+
+          <Link to="/forgot-password" className="forgotPasswordLink">
             Forgot Password
           </Link>
+
           <div className="signUpBar">
             <p className="signUpText">Sign Up</p>
             <button className="signUpButton">
@@ -109,13 +112,15 @@ const SignUp = () => {
             </button>
           </div>
         </form>
-        {/* Google OAuth */}
+
+        {/* <OAuth /> */}
+
         <Link to="/sign-in" className="registerLink">
           Sign In Instead
         </Link>
       </div>
     </>
   );
-};
+}
 
 export default SignUp;
