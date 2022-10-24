@@ -1,5 +1,5 @@
+import React from "react";
 import { useState, useEffect, useRef } from "react";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   getStorage,
   ref,
@@ -8,14 +8,14 @@ import {
 } from "firebase/storage";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase.config";
-import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import Spinner from "../components/Spinner";
 
-function CreateListing() {
-  // eslint-disable-next-line
-  const [geolocationEnabled, setGeolocationEnabled] = useState(true);
+const CreateListing = () => {
+  const [geolocationEnabled] = useState(true);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     type: "rent",
@@ -63,7 +63,6 @@ function CreateListing() {
         }
       });
     }
-
     return () => {
       isMounted.current = false;
     };
@@ -92,30 +91,32 @@ function CreateListing() {
 
     if (geolocationEnabled) {
       const response = await fetch(
-        `http://api.positionstack.com/v1/forward?access_key=${process.env.REACT_APP_GEOCODE_API_KEY}=${address}`
+        `https://api.geoapify.com/v1/geocode/search?text=38%20address=${address}&apiKey=${process.env.REACT_APP_GEOCODE_API_KEY}`
       );
 
       const data = await response.json();
-      console.log(data);
-      geolocation.lat = data.results[0]?.geometry.location.lat ?? 0;
-      geolocation.lng = data.results[0]?.geometry.location.lng ?? 0;
+
+      console.log("G", data);
+
+      geolocation.lat = data?.features?.[0]?.geometry?.coordinates?.[0] ?? 0;
+      geolocation.lon = data?.features?.[0]?.geometry?.coordinates?.[1] ?? 0;
 
       location =
-        data.status === "ZERO_RESULTS"
+        data?.status === "ZERO_RESULTS"
           ? undefined
-          : data.results[0]?.formatted_address;
+          : data.features[0]?.formatted_address;
 
-      if (location === undefined || location.includes("undefined")) {
+      if (!data?.features?.length) {
         setLoading(false);
         toast.error("Please enter a correct address");
         return;
       }
     } else {
       geolocation.lat = latitude;
-      geolocation.lng = longitude;
+      geolocation.lon = longitude;
     }
 
-    // Store image in firebase
+    // store image in firebase
     const storeImage = async (image) => {
       return new Promise((resolve, reject) => {
         const storage = getStorage();
@@ -137,8 +138,6 @@ function CreateListing() {
                 break;
               case "running":
                 console.log("Upload is running");
-                break;
-              default:
                 break;
             }
           },
@@ -174,6 +173,7 @@ function CreateListing() {
     formDataCopy.location = address;
     delete formDataCopy.images;
     delete formDataCopy.address;
+    location && (formDataCopy.location = location);
     !formDataCopy.offer && delete formDataCopy.discountedPrice;
 
     const docRef = await addDoc(collection(db, "listings"), formDataCopy);
@@ -185,7 +185,7 @@ function CreateListing() {
   const onMutate = (e) => {
     let boolean = null;
 
-    if (e.target.value === "true") {
+    if (e.target.value === "ture") {
       boolean = true;
     }
     if (e.target.value === "false") {
@@ -199,8 +199,7 @@ function CreateListing() {
         images: e.target.files,
       }));
     }
-
-    // Text/Booleans/Numbers
+    //Text/Booleans/Numbers
     if (!e.target.files) {
       setFormData((prevState) => ({
         ...prevState,
@@ -218,10 +217,9 @@ function CreateListing() {
       <header>
         <p className="pageHeader">Create a Listing</p>
       </header>
-
       <main>
         <form onSubmit={onSubmit}>
-          <label className="formLabel">Sell / Rent</label>
+          <label className="formLabel">Sale / Rent</label>
           <div className="formButtons">
             <button
               type="button"
@@ -230,8 +228,9 @@ function CreateListing() {
               value="sale"
               onClick={onMutate}
             >
-              Sell
+              Sale
             </button>
+
             <button
               type="button"
               className={type === "rent" ? "formButtonActive" : "formButton"}
@@ -269,6 +268,7 @@ function CreateListing() {
                 required
               />
             </div>
+
             <div>
               <label className="formLabel">Bathrooms</label>
               <input
@@ -411,7 +411,6 @@ function CreateListing() {
             />
             {type === "rent" && <p className="formPriceText">$ / Month</p>}
           </div>
-
           {offer && (
             <>
               <label className="formLabel">Discounted Price</label>
@@ -449,6 +448,6 @@ function CreateListing() {
       </main>
     </div>
   );
-}
+};
 
 export default CreateListing;
