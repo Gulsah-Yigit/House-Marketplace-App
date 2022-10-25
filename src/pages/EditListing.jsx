@@ -127,7 +127,7 @@ const EditListing = () => {
 
       const data = await response.json();
 
-      console.log(data);
+      console.log("GGGG", data);
 
       geolocation.lat = data?.features?.[0]?.geometry?.coordinates?.[0] ?? 0;
       geolocation.lon = data?.features?.[0]?.geometry?.coordinates?.[1] ?? 0;
@@ -214,7 +214,7 @@ const EditListing = () => {
     await updateDoc(docRef, formDataCopy);
     setLoading(false);
     toast.success("Listing saved");
-    navigate(`/category/${formDataCopy.type}/${docRef.id}`);
+    navigate("/");
   };
 
   const onMutate = (e) => {
